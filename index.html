@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KBO LEAGUE RECORD · 1982–2025</title>
+<style>
+:root {
+  --page-bg:#f5f5f3; --surface:#ffffff; --text:#111111; --muted:#777b82; --border:#dedfdf;
+  --grid:#e9eaeb; --inactive:#f1f1ef; --focus:#111111; --line-text:#111111;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;font-family:Pretendard,"Noto Sans KR",Arial,sans-serif;
+  background:var(--page-bg);color:var(--text);transition:background .38s ease,color .38s ease;
+}
+.app{max-width:1760px;margin:0 auto;padding:34px 34px 42px}
+.header{display:flex;justify-content:space-between;align-items:flex-end;gap:30px;margin-bottom:24px}
+.kicker{font-size:12px;font-weight:900;letter-spacing:.22em;margin-bottom:10px;color:var(--text);opacity:.7}
+.title-row{display:flex;align-items:center;gap:11px;min-height:56px}
+h1{font-size:clamp(29px,3.3vw,50px);letter-spacing:-.055em;margin:0;line-height:1;font-weight:900}
+.period{font-size:15px;font-weight:800;letter-spacing:.08em;margin-top:12px;color:var(--text);opacity:.55}
+.tabs{display:flex;gap:24px;border-bottom:1px solid color-mix(in srgb,var(--text) 20%,transparent)}
+.tab{padding:10px 0 11px;border:0;border-bottom:3px solid transparent;background:none;color:var(--text);opacity:.42;font:inherit;font-size:14px;font-weight:800;cursor:pointer}
+.tab.active{opacity:1;border-bottom-color:var(--text)}
+
+.layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:20px}
+.team-panel{min-width:0}
+.panel-label{font-size:10px;font-weight:900;letter-spacing:.16em;opacity:.48;margin-bottom:9px}
+.all-btn{
+  width:100%;height:44px;border:1px solid var(--border);background:var(--surface);color:var(--text);
+  font-size:12px;font-weight:900;letter-spacing:.12em;cursor:pointer;margin-bottom:9px;
+  transition:.25s;border-radius:4px
+}
+.team-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.team-btn{
+  --team:#111;
+  appearance:none;border:1px solid color-mix(in srgb,var(--text) 13%,transparent);
+  background:color-mix(in srgb,var(--surface) 86%,transparent);color:var(--text);
+  min-height:126px;border-radius:7px;padding:11px 5px 9px;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;
+  transition:transform .18s ease,background .22s ease,border-color .22s ease,opacity .2s ease;
+}
+.team-btn:hover{transform:translateY(-2px);border-color:var(--team)}
+.team-btn.selected{border:2px solid var(--team);background:color-mix(in srgb,var(--surface) 72%,transparent)}
+.team-btn.dim{opacity:.42}
+.logo-box{height:72px;width:88px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.logo-box img{display:block;max-width:82px;max-height:68px;object-fit:contain}
+.logo-fallback{font-size:26px;font-weight:1000;color:var(--team);letter-spacing:-.05em}
+.team-name{font-size:11px;font-weight:900;line-height:1.16;text-align:center;letter-spacing:-.02em}
+.team-era{font-size:9px;opacity:.45;font-weight:700}
+
+.chart-area{min-width:0}
+.chart-top{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:10px}
+.chart-title{font-size:16px;font-weight:900;margin:0}
+.chart-help{font-size:11px;font-weight:650;opacity:.55;line-height:1.5;text-align:right}
+.chart-stage{
+  position:relative;background:var(--surface);border:1px solid var(--border);border-radius:6px;
+  overflow:hidden;transition:background .38s ease,border-color .38s ease;
+}
+.chart-scroll{overflow-x:auto;overscroll-behavior-inline:contain}
+#chartWrap{width:100%;min-width:900px;position:relative;transform-origin:left center;transition:width .16s ease}
+svg{display:block;width:100%;height:auto}
+.tooltip{
+  display:none;position:absolute;z-index:10;pointer-events:none;min-width:170px;
+  padding:12px 13px;background:#111;color:#fff;border-radius:4px;
+  box-shadow:0 8px 25px rgba(0,0,0,.2)
+}
+.tooltip .year{font-size:10px;font-weight:800;opacity:.55;letter-spacing:.08em}
+.tooltip .team{font-size:11px;font-weight:800;margin-top:3px;opacity:.75}
+.tooltip .rank{font-size:21px;font-weight:1000;margin-top:9px;letter-spacing:-.04em}
+.tooltip .meta{font-size:11px;font-weight:650;opacity:.65;margin-top:3px}
+.chart-foot{display:flex;gap:18px;flex-wrap:wrap;padding:12px 15px;border-top:1px solid var(--border);font-size:10px;font-weight:700;opacity:.55}
+.source{font-size:9.5px;line-height:1.6;opacity:.44;margin-top:10px;max-width:1000px}
+
+@media(max-width:900px){
+  .app{padding:20px 14px 30px} .header{align-items:flex-start;flex-direction:column}
+  .layout{grid-template-columns:1fr} .team-grid{grid-template-columns:repeat(4,110px);overflow-x:auto;padding-bottom:5px}
+  .team-btn{min-height:116px} .all-btn{width:110px}
+  .chart-top{align-items:flex-start;flex-direction:column} .chart-help{text-align:left}
+}
+
+/* Top-level section navigation */
+.section-nav{
+  display:flex;gap:6px;padding:4px;background:rgba(127,127,127,.10);
+  border:1px solid var(--border);border-radius:7px;align-self:flex-end
+}
+.section-btn{
+  appearance:none;border:0;background:transparent;color:var(--text);opacity:.48;
+  padding:10px 18px;border-radius:4px;font:inherit;font-size:12px;font-weight:950;
+  letter-spacing:.10em;cursor:pointer;transition:.2s
+}
+.section-btn.active{background:var(--text);color:var(--page-bg);opacity:1}
+.record-view[hidden],.season-view[hidden]{display:none!important}
+
+/* 2026 standings */
+.season-view{min-width:0}
+.season-head{
+  display:flex;justify-content:space-between;align-items:flex-end;gap:20px;
+  padding:8px 0 18px;border-bottom:1px solid var(--border);margin-bottom:14px
+}
+.season-kicker{font-size:11px;font-weight:950;letter-spacing:.14em;opacity:.45}
+.season-title{font-size:clamp(26px,3vw,44px);font-weight:1000;letter-spacing:-.05em;margin:5px 0 0}
+.season-date{font-size:11px;font-weight:750;opacity:.5;text-align:right;line-height:1.55}
+.standings{
+  background:var(--surface);border:1px solid var(--border);border-radius:7px;
+  overflow:hidden
+}
+.standing-head,.standing-row{
+  display:grid;grid-template-columns:56px 64px minmax(130px,1.15fr) minmax(150px,1fr) 84px 84px;
+  align-items:center;gap:12px
+}
+.standing-head{
+  padding:10px 18px;font-size:9px;font-weight:900;letter-spacing:.12em;
+  opacity:.42;border-bottom:1px solid var(--border)
+}
+.standing-row{
+  position:relative;padding:12px 18px;border-bottom:1px solid var(--border);
+  min-height:74px;isolation:isolate
+}
+.standing-row:last-child{border-bottom:0}
+.standing-row::before{
+  content:"";position:absolute;inset:0 auto 0 0;width:var(--pct);max-width:100%;
+  background:color-mix(in srgb,var(--team) 9%,transparent);z-index:-1
+}
+.rank-no{font-size:27px;font-weight:1000;letter-spacing:-.06em}
+.standing-logo{width:52px;height:46px;display:grid;place-items:center}
+.standing-logo img{max-width:50px;max-height:43px;object-fit:contain}
+.standing-team{font-size:15px;font-weight:950;letter-spacing:-.025em}
+.standing-record{font-size:12px;font-weight:750;opacity:.72}
+.metric-label{display:none}
+.metric{font-size:13px;font-weight:950}
+.gb{font-size:13px;font-weight:850;opacity:.65}
+.winbar{height:5px;border-radius:99px;background:color-mix(in srgb,var(--text) 10%,transparent);margin-top:7px;overflow:hidden}
+.winbar > i{display:block;height:100%;width:var(--pct);background:var(--team);border-radius:inherit}
+.season-source{margin-top:10px;font-size:10px;line-height:1.55;opacity:.48}
+
+/* KIA selected high-contrast emblem */
+.kia-alt{display:none;width:82px;height:68px}
+.team-btn[data-id="kia"].selected .logo-box > img{display:none}
+.team-btn[data-id="kia"].selected .kia-alt{display:block}
+.kia-alt svg{width:100%;height:100%;display:block}
+
+@media(max-width:900px){
+  .section-nav{align-self:flex-start}
+  .standing-head{display:none}
+  .standing-row{grid-template-columns:40px 52px 1fr 76px;gap:9px;padding:10px 12px}
+  .standing-record{grid-column:3/4;font-size:10px}
+  .standing-row .metric:nth-of-type(1){grid-column:4;grid-row:1}
+  .standing-row .gb{grid-column:4;grid-row:2;font-size:10px}
+}
+
+
+/* 2026 daily rank chart */
+#dailyChartWrap{
+  width:100%;min-width:900px;position:relative;transform-origin:left center;
+  transition:width .16s ease
+}
+#dailyChart{display:block;width:100%;height:auto}
+#dailyTooltip{
+  display:none;position:absolute;z-index:12;pointer-events:none;min-width:164px;
+  padding:12px 13px;background:#111;color:#fff;border-radius:4px;
+  box-shadow:0 8px 25px rgba(0,0,0,.22)
+}
+#dailyTooltip .year{font-size:10px;font-weight:800;opacity:.55;letter-spacing:.06em}
+#dailyTooltip .team{font-size:11px;font-weight:800;margin-top:3px;opacity:.75}
+#dailyTooltip .rank{font-size:21px;font-weight:1000;margin-top:9px;letter-spacing:-.04em}
+.season-view .layout{margin-top:0}
+.season-view .team-panel{min-width:0}
+
+
+/* ===== 2026 NOW ===== */
+.now-view[hidden]{display:none!important}
+.now-view{min-width:0}
+.now-hero{
+  display:grid;grid-template-columns:minmax(0,1.1fr) minmax(280px,.9fr);
+  gap:22px;align-items:end;margin:4px 0 20px
+}
+.now-eyebrow{font-size:11px;font-weight:950;letter-spacing:.16em;opacity:.48}
+.now-title{
+  margin:6px 0 8px;font-size:clamp(31px,4vw,58px);line-height:.98;
+  letter-spacing:-.06em;font-weight:1000
+}
+.now-copy{font-size:12px;line-height:1.7;opacity:.58;max-width:720px}
+.now-summary{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px
+}
+.summary-card{
+  border:1px solid var(--border);background:var(--surface);border-radius:6px;
+  padding:14px 15px
+}
+.summary-card small{display:block;font-size:9px;font-weight:900;letter-spacing:.11em;opacity:.42}
+.summary-card strong{display:block;font-size:24px;letter-spacing:-.05em;margin-top:4px}
+.now-table-shell{
+  border:1px solid var(--border);background:var(--surface);border-radius:7px;overflow:hidden
+}
+.now-head,.now-row{
+  display:grid;
+  grid-template-columns:58px 70px minmax(150px,1.35fr) 92px 92px 92px 92px 92px;
+  gap:10px;align-items:center
+}
+.now-head{
+  min-height:42px;padding:0 18px;border-bottom:1px solid var(--border);
+  font-size:9px;font-weight:950;letter-spacing:.11em;opacity:.42
+}
+.now-row{
+  position:relative;min-height:78px;padding:10px 18px;border-bottom:1px solid var(--border);
+  isolation:isolate
+}
+.now-row:last-child{border-bottom:0}
+.now-row::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--team)
+}
+.now-rank{font-size:27px;font-weight:1000;letter-spacing:-.06em}
+.now-logo{width:60px;height:52px;display:grid;place-items:center}
+.now-logo img{max-width:56px;max-height:48px;object-fit:contain}
+.now-team strong{display:block;font-size:15px;letter-spacing:-.03em}
+.now-team span{display:block;font-size:10px;opacity:.48;margin-top:3px;font-weight:700}
+.now-metric strong{display:block;font-size:15px;letter-spacing:-.03em}
+.now-metric span{display:block;font-size:9px;opacity:.44;margin-top:3px;font-weight:800}
+.now-progress{
+  height:4px;background:color-mix(in srgb,var(--text) 10%,transparent);
+  border-radius:99px;overflow:hidden;margin-top:6px
+}
+.now-progress i{display:block;height:100%;background:var(--team);width:var(--progress);border-radius:99px}
+.now-source{margin-top:10px;font-size:10px;line-height:1.6;opacity:.48}
+.joint-rank{font-size:9px;font-weight:900;opacity:.5;margin-left:3px}
+@media(max-width:950px){
+  .now-hero{grid-template-columns:1fr}
+  .now-head{display:none}
+  .now-row{
+    grid-template-columns:42px 58px minmax(110px,1fr) 76px 76px;
+    gap:8px;padding:10px 12px
+  }
+  .now-metric:nth-of-type(n+4){display:none}
+}
+
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="header">
+    <div>
+      <div class="kicker">KBO LEAGUE RECORD</div>
+      <div class="title-row"><h1>KBO 연도별 순위 변화</h1></div>
+      <div class="period">1982–2025</div>
+    </div>
+    <nav class="section-nav" aria-label="섹션">
+      <button type="button" class="section-btn active" data-section="now2026">2026 NOW</button>
+      <button type="button" class="section-btn" data-section="season2026">2026 TREND</button>
+      <button type="button" class="section-btn" data-section="record">RECORD</button>
+    </nav>
+  </header>
+
+  <section class="now-view" id="nowView">
+    <div class="now-hero">
+      <div>
+        <div class="now-eyebrow">2026 KBO LEAGUE · CURRENT STANDINGS</div>
+        <h2 class="now-title">지금, 리그는<br>어디쯤 와 있을까?</h2>
+        <div class="now-copy">
+          2026년 10월 1일까지 완료된 경기 기준. 정규시즌 144경기 기준으로
+          현재 순위, 소화 경기, 잔여 경기, 승률, 선두와의 게임차를 한 화면에 정리했습니다.
+        </div>
+      </div>
+      <div class="now-summary">
+        <div class="summary-card"><small>LEADER</small><strong>KT 위즈</strong></div>
+        <div class="summary-card"><small>LEADER WIN%</small><strong>.632</strong></div>
+        <div class="summary-card"><small>DATA THROUGH</small><strong>10.01</strong></div>
+        <div class="summary-card"><small>SEASON GAMES</small><strong>144</strong></div>
+      </div>
+    </div>
+
+    <div class="now-table-shell">
+      <div class="now-head">
+        <span>RANK</span><span></span><span>TEAM</span><span>PLAYED</span>
+        <span>REMAIN</span><span>WIN%</span><span>GB</span><span>PROGRESS</span>
+      </div>
+      <div id="nowRows"></div>
+    </div>
+
+    <div class="now-source">
+      출처: KBO SPORTS DATA DESK · 2026.10.01 완료 경기 기준.
+      잔여 경기 = 144 − 소화 경기, 승률 = 승 ÷ (승 + 패), 게임차는 선두 기준.
+    </div>
+  </section>
+
+  <section class="record-view" id="recordView" hidden>
+    <nav class="tabs" aria-label="기록 그래프 종류" style="width:max-content;margin:0 0 16px auto">
+      <button type="button" class="tab active" data-mode="regular">정규시즌</button>
+      <button type="button" class="tab" data-mode="post">포스트시즌</button>
+    </nav>
+  <main class="layout">
+    <aside class="team-panel">
+      <div class="panel-label">FRANCHISE</div>
+      <button type="button" class="all-btn" id="allBtn">ALL TEAMS</button>
+      <div class="team-grid" id="teamButtons"></div>
+    </aside>
+
+    <section class="chart-area">
+      <div class="chart-top">
+        <div>
+          <p class="chart-title" id="chartTitle">정규시즌 최종 순위</p>
+        </div>
+        <div class="chart-help" id="chartHelp">팀을 선택하면 해당 프랜차이즈의 기록이 강조됩니다.<br>포인트에 마우스를 올리면 순위와 참가 구단 수를 볼 수 있습니다.<br>차트 위에서 마우스 휠로 그래프 폭을 축소·확대할 수 있습니다.</div>
+      </div>
+      <div class="chart-stage" id="chartStage">
+        <div class="chart-scroll">
+          <div id="chartWrap">
+            <svg id="chart" viewBox="0 0 1510 700" aria-label="KBO 연도별 순위 변화"></svg>
+            <div class="tooltip" id="tooltip"></div>
+          </div>
+        </div>
+        <div class="chart-foot" id="chartFoot">
+          <span>위로 갈수록 높은 순위</span><span>회색 영역 = 당시 존재하지 않은 순위</span><span>구단명 변경은 프랜차이즈 계보로 연결</span>
+        </div>
+      </div>
+      <div class="source">정규시즌 데이터는 KBO 공식 구단 변천사와 연도별 팀 순위를 기준으로 구성. 포스트시즌은 우승·준우승·PO·준PO·WC 도달 단계를 1~5위로 시각화하고, 미진출 시즌은 회색 점선으로 연결.</div>
+    </section>
+  </main>
+  </section>
+
+  <section class="season-view" id="seasonView" hidden>
+    <div class="season-head">
+      <div>
+        <div class="season-kicker">2026 KBO LEAGUE</div>
+        <div class="season-title">일자별 순위 변화</div>
+      </div>
+      <div class="season-date" id="seasonDateLabel">개막 이후 경기일 기준<br>데이터 불러오는 중</div>
+    </div>
+
+    <main class="layout">
+      <aside class="team-panel">
+        <div class="panel-label">2026 TEAMS</div>
+        <button type="button" class="all-btn" id="allBtn2026">ALL TEAMS</button>
+        <div class="team-grid" id="teamButtons2026"></div>
+      </aside>
+
+      <section class="chart-area">
+        <div class="chart-top">
+          <div>
+            <p class="chart-title">2026 정규시즌 일자별 순위</p>
+          </div>
+          <div class="chart-help">팀을 선택하면 해당 구단의 2026 순위 변화를 강조합니다.<br>포인트 Hover: 날짜 → 순위 · 마우스 휠: 가로 폭 조절</div>
+        </div>
+
+        <div class="chart-stage">
+          <div class="chart-scroll" id="dailyChartScroll">
+            <div id="dailyChartWrap">
+              <svg id="dailyChart" viewBox="0 0 1510 700" aria-label="2026 KBO 일자별 순위 변화"></svg>
+              <div class="tooltip" id="dailyTooltip"></div>
+            </div>
+          </div>
+          <div class="chart-foot">
+            <span>위로 갈수록 높은 순위</span>
+            <span>경기가 반영된 날짜별 순위</span>
+            <span>LG = 빨간 선 + 검정 포인트</span>
+          </div>
+        </div>
+
+        <div class="season-source" id="seasonSource">
+          2026 완료 경기를 누적해 재구성한 일자별 순위입니다. 동률은 공동 순위, 경기 있는 날 기준입니다.
+        </div>
+      </section>
+    </main>
+  </section>
+</div>
+
+<script src="https://minyunpapa.github.io/kbo-dashboard/data.js"></script>
+<script>
+const NOW_2026=[{"rank": 1, "id": "kt", "team": "KT 위즈", "played": 137, "remain": 7, "w": 84, "l": 49, "d": 4, "pct": 0.632, "gb": 0}, {"rank": 2, "id": "samsung", "team": "삼성 라이온즈", "played": 136, "remain": 8, "w": 81, "l": 52, "d": 3, "pct": 0.609, "gb": 3}, {"rank": 3, "id": "lg", "team": "LG 트윈스", "played": 136, "remain": 8, "w": 75, "l": 60, "d": 1, "pct": 0.556, "gb": 10}, {"rank": 4, "id": "kia", "team": "KIA 타이거즈", "played": 135, "remain": 9, "w": 72, "l": 61, "d": 2, "pct": 0.541, "gb": 12}, {"rank": 5, "id": "doosan", "team": "두산 베어스", "played": 138, "remain": 6, "w": 70, "l": 63, "d": 5, "pct": 0.526, "gb": 14}, {"rank": 6, "id": "ssg", "team": "SSG 랜더스", "played": 137, "remain": 7, "w": 61, "l": 71, "d": 5, "pct": 0.462, "gb": 22.5}, {"rank": 7, "id": "lotte", "team": "롯데 자이언츠", "played": 135, "remain": 9, "w": 61, "l": 72, "d": 2, "pct": 0.459, "gb": 23}, {"rank": 7, "id": "nc", "team": "NC 다이노스", "played": 137, "remain": 7, "w": 62, "l": 73, "d": 2, "pct": 0.459, "gb": 23}, {"rank": 9, "id": "hanwha", "team": "한화 이글스", "played": 138, "remain": 6, "w": 55, "l": 79, "d": 4, "pct": 0.41, "gb": 29.5}, {"rank": 10, "id": "kiwoom", "team": "키움 히어로즈", "played": 139, "remain": 5, "w": 47, "l": 88, "d": 4, "pct": 0.348, "gb": 38}];
+const DATA={"years": [1982, 1983, 1984, 1985, 1986, 1987, 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025], "teams": [{"id": "kia", "name": "KIA 타이거즈", "short": "KIA", "color": "#EA0029", "secondary": "#111111", "themeBg": "#EA0029", "themeText": "#FFFFFF", "themeLine": "#FFFFFF", "logo": "https://6ptotvmi5753.edge.naverncp.com/KBO_IMAGE/emblem/regular/fixed/emblem_HT.png", "era": "1982–"}, {"id": "samsung", "name": "삼성 라이온즈", "short": "삼성", "color": "#074CA1", "secondary": "#FFFFFF", "themeBg": "#074CA1", "themeText": "#FFFFFF", "themeLine": "#FFFFFF", "logo": "https://6ptotvmi5753.edge.naverncp.com/KBO_IMAGE/emblem/regular/fixed/emblem_SS.png", "era": "1982–"}, {"id": "lotte", "name": "롯데 자이언츠", "short": "롯데", "color": "#002955", "secondary": "#DC0232", "themeBg": "#002955", "themeText": "#FFFFFF", "themeLine": "#DC0232", "logo": "https://6ptotvmi5753.edge.naverncp.com/KBO_IMAGE/emblem/regular/fixed/emblem_LT.png", "era": "1982–"}, {"id": "lg", "name": "LG 트윈스", "short": "LG", "color": "#C30452", "secondary": "#000000", "themeBg": "#474747", "themeText": "#FFFFFF", "themeLine": "#C30452", "logo": "https://6ptotvmi5753.edge.naverncp.com/KBO_IMAGE/emblem/regular/fixed/emblem_LG.png", "era": "1982–"}, {"id": "doosan", "name": "두산 베어스", "short": "두산", "color": "#131230", "secondary": "#FFFFFF", "themeBg": "#131230", "themeText": "#FFFFFF", "themeLine": "#FFFFFF", "logo": "https://6ptotvmi5753.edge.naverncp.com/KBO_IMAGE/emblem/regular/fixed/emblem_OB.png", "era": "1982–"}, {"id": "hyundai", "name": "현대 계열", "short": "현대", "color": "#008C5A", "secondary": "#F7B733", "themeBg": "#08734A", "themeText": "#FFFFFF", "themeLine": "#F7B733", "logo": "https://img1.daumcdn.net/thumb/R800x0/?fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FAtn07%2FbtsNudZMXI5%2FAAAAAAAAAAAAAAAAAAAAADpV_K_mFAU0joOMI5PEGMIa_IEVF5uFL9HUC6vU_iMk%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1772290799%26allow_ip%3D%26allow_referer%3D%26signature%3DF4Hs50KJAeA62oFQ6zbi1FwJ4Yg%253D&scode=mtistory2", "era": "1982–2007"}, {"id": "hanwha", "name": "한화 이글스", "short": "한화", "color": "#FF7F00", "secondary": "#111111", "themeBg": "#FF7F00", "themeText": "#111111", "themeLine": "#111111", "logo": "https://6ptotvmi5753.edge.naverncp.com/KBO_IMAGE/emblem/regular/fixed/emblem_HH.png", "era": "1986–"}, {"id": "ssangwool", "name": "쌍방울 레이더스", "short": "쌍방울", "color": "#111111", "secondary": "#FFC81E", "themeBg": "#151515", "themeText": "#FFC81E", "themeLine": "#FFC81E", "logo": "https://img1.daumcdn.net/thumb/R800x0/?fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FmGc3w%2Fbtq8IghCA2V%2FqmDtHlaUrGnC5sQldsZGL1%2Fimg.jpg&scode=mtistory2", "era": "1991–1999"}, {"id": "ssg", "name": "SSG 랜더스", "short": "SSG", "color": "#CE0E2D", "secondary": "#FFB81C", "themeBg": "#CE0E2D", "themeText": "#FFF4D1", "themeLine": "#FFB81C", "logo": "https://6ptotvmi5753.edge.naverncp.com/KBO_IMAGE/emblem/regular/fixed/emblem_SK.png", "era": "2000–"}, {"id": "kiwoom", "name": "키움 히어로즈", "short": "키움", "color": "#820024", "secondary": "#FFCE9E", "themeBg": "#820024", "themeText": "#FFCE9E", "themeLine": "#FFCE9E", "logo": "https://6ptotvmi5753.edge.naverncp.com/KBO_IMAGE/emblem/regular/fixed/emblem_WO.png", "era": "2008–"}, {"id": "nc", "name": "NC 다이노스", "short": "NC", "color": "#061D3D", "secondary": "#C79F79", "themeBg": "#061D3D", "themeText": "#EAD9C8", "themeLine": "#C79F79", "logo": "https://6ptotvmi5753.edge.naverncp.com/KBO_IMAGE/emblem/regular/fixed/emblem_NC.png", "era": "2013–"}, {"id": "kt", "name": "KT 위즈", "short": "KT", "color": "#282828", "secondary": "#E60012", "themeBg": "#282828", "themeText": "#FFFFFF", "themeLine": "#FF3141", "logo": "https://6ptotvmi5753.edge.naverncp.com/KBO_IMAGE/emblem/regular/fixed/emblem_KT.png", "era": "2015–"}], "regularData": {"samsung": {"1982": 2, "1983": 4, "1984": 2, "1985": 1, "1986": 2, "1987": 2, "1988": 4, "1989": 4, "1990": 2, "1991": 3, "1992": 4, "1993": 2, "1994": 5, "1995": 5, "1996": 6, "1997": 4, "1998": 3, "1999": 4, "2000": 3, "2001": 2, "2002": 1, "2003": 4, "2004": 2, "2005": 1, "2006": 1, "2007": 4, "2008": 4, "2009": 5, "2010": 2, "2011": 1, "2012": 1, "2013": 1, "2014": 1, "2015": 2, "2016": 9, "2017": 9, "2018": 6, "2019": 8, "2020": 8, "2021": 3, "2022": 7, "2023": 8, "2024": 2, "2025": 4}, "kia": {"1982": 4, "1983": 1, "1984": 5, "1985": 3, "1986": 1, "1987": 1, "1988": 1, "1989": 1, "1990": 3, "1991": 1, "1992": 3, "1993": 1, "1994": 4, "1995": 4, "1996": 1, "1997": 1, "1998": 5, "1999": 7, "2000": 6, "2001": 5, "2002": 3, "2003": 3, "2004": 4, "2005": 8, "2006": 4, "2007": 8, "2008": 6, "2009": 1, "2010": 5, "2011": 4, "2012": 5, "2013": 8, "2014": 8, "2015": 7, "2016": 5, "2017": 1, "2018": 5, "2019": 7, "2020": 6, "2021": 9, "2022": 5, "2023": 6, "2024": 1, "2025": 8}, "lotte": {"1982": 5, "1983": 6, "1984": 1, "1985": 2, "1986": 5, "1987": 3, "1988": 3, "1989": 7, "1990": 6, "1991": 4, "1992": 1, "1993": 6, "1994": 6, "1995": 2, "1996": 5, "1997": 8, "1998": 8, "1999": 2, "2000": 5, "2001": 8, "2002": 8, "2003": 8, "2004": 8, "2005": 5, "2006": 7, "2007": 7, "2008": 3, "2009": 4, "2010": 4, "2011": 3, "2012": 4, "2013": 5, "2014": 7, "2015": 8, "2016": 8, "2017": 3, "2018": 7, "2019": 10, "2020": 7, "2021": 8, "2022": 8, "2023": 7, "2024": 7, "2025": 7}, "hyundai": {"1982": 6, "1983": 3, "1984": 6, "1985": 6, "1986": 6, "1987": 7, "1988": 7, "1989": 3, "1990": 5, "1991": 5, "1992": 6, "1993": 8, "1994": 2, "1995": 7, "1996": 2, "1997": 6, "1998": 1, "1999": 5, "2000": 1, "2001": 3, "2002": 4, "2003": 1, "2004": 1, "2005": 7, "2006": 3, "2007": 6, "2008": null, "2009": null, "2010": null, "2011": null, "2012": null, "2013": null, "2014": null, "2015": null, "2016": null, "2017": null, "2018": null, "2019": null, "2020": null, "2021": null, "2022": null, "2023": null, "2024": null, "2025": null}, "lg": {"1982": 3, "1983": 2, "1984": 4, "1985": 5, "1986": 3, "1987": 5, "1988": 6, "1989": 6, "1990": 1, "1991": 6, "1992": 7, "1993": 4, "1994": 1, "1995": 3, "1996": 7, "1997": 2, "1998": 2, "1999": 6, "2000": 4, "2001": 6, "2002": 2, "2003": 6, "2004": 6, "2005": 6, "2006": 8, "2007": 5, "2008": 8, "2009": 7, "2010": 6, "2011": 6, "2012": 7, "2013": 3, "2014": 4, "2015": 9, "2016": 4, "2017": 6, "2018": 8, "2019": 4, "2020": 4, "2021": 4, "2022": 3, "2023": 1, "2024": 3, "2025": 1}, "doosan": {"1982": 1, "1983": 5, "1984": 3, "1985": 4, "1986": 4, "1987": 4, "1988": 5, "1989": 5, "1990": 7, "1991": 8, "1992": 5, "1993": 3, "1994": 7, "1995": 1, "1996": 8, "1997": 5, "1998": 4, "1999": 3, "2000": 2, "2001": 1, "2002": 5, "2003": 7, "2004": 3, "2005": 2, "2006": 5, "2007": 2, "2008": 2, "2009": 3, "2010": 3, "2011": 5, "2012": 3, "2013": 2, "2014": 6, "2015": 1, "2016": 1, "2017": 2, "2018": 2, "2019": 1, "2020": 2, "2021": 2, "2022": 9, "2023": 5, "2024": 4, "2025": 9}, "hanwha": {"1982": null, "1983": null, "1984": null, "1985": null, "1986": 7, "1987": 6, "1988": 2, "1989": 2, "1990": 4, "1991": 2, "1992": 2, "1993": 5, "1994": 3, "1995": 6, "1996": 4, "1997": 7, "1998": 7, "1999": 1, "2000": 7, "2001": 4, "2002": 7, "2003": 5, "2004": 7, "2005": 4, "2006": 2, "2007": 3, "2008": 5, "2009": 8, "2010": 8, "2011": 6, "2012": 8, "2013": 9, "2014": 9, "2015": 6, "2016": 7, "2017": 8, "2018": 3, "2019": 9, "2020": 10, "2021": 10, "2022": 10, "2023": 9, "2024": 8, "2025": 2}, "ssangwool": {"1982": null, "1983": null, "1984": null, "1985": null, "1986": null, "1987": null, "1988": null, "1989": null, "1990": null, "1991": 6, "1992": 8, "1993": 7, "1994": 8, "1995": 8, "1996": 3, "1997": 3, "1998": 6, "1999": 8, "2000": null, "2001": null, "2002": null, "2003": null, "2004": null, "2005": null, "2006": null, "2007": null, "2008": null, "2009": null, "2010": null, "2011": null, "2012": null, "2013": null, "2014": null, "2015": null, "2016": null, "2017": null, "2018": null, "2019": null, "2020": null, "2021": null, "2022": null, "2023": null, "2024": null, "2025": null}, "ssg": {"1982": null, "1983": null, "1984": null, "1985": null, "1986": null, "1987": null, "1988": null, "1989": null, "1990": null, "1991": null, "1992": null, "1993": null, "1994": null, "1995": null, "1996": null, "1997": null, "1998": null, "1999": null, "2000": 8, "2001": 7, "2002": 6, "2003": 2, "2004": 5, "2005": 3, "2006": 6, "2007": 1, "2008": 1, "2009": 2, "2010": 1, "2011": 2, "2012": 2, "2013": 6, "2014": 5, "2015": 5, "2016": 6, "2017": 5, "2018": 1, "2019": 3, "2020": 9, "2021": 6, "2022": 1, "2023": 3, "2024": 6, "2025": 3}, "kiwoom": {"1982": null, "1983": null, "1984": null, "1985": null, "1986": null, "1987": null, "1988": null, "1989": null, "1990": null, "1991": null, "1992": null, "1993": null, "1994": null, "1995": null, "1996": null, "1997": null, "1998": null, "1999": null, "2000": null, "2001": null, "2002": null, "2003": null, "2004": null, "2005": null, "2006": null, "2007": null, "2008": 7, "2009": 6, "2010": 7, "2011": 8, "2012": 6, "2013": 4, "2014": 2, "2015": 4, "2016": 3, "2017": 7, "2018": 4, "2019": 2, "2020": 5, "2021": 5, "2022": 2, "2023": 10, "2024": 10, "2025": 10}, "nc": {"1982": null, "1983": null, "1984": null, "1985": null, "1986": null, "1987": null, "1988": null, "1989": null, "1990": null, "1991": null, "1992": null, "1993": null, "1994": null, "1995": null, "1996": null, "1997": null, "1998": null, "1999": null, "2000": null, "2001": null, "2002": null, "2003": null, "2004": null, "2005": null, "2006": null, "2007": null, "2008": null, "2009": null, "2010": null, "2011": null, "2012": null, "2013": 7, "2014": 3, "2015": 3, "2016": 2, "2017": 4, "2018": 10, "2019": 5, "2020": 1, "2021": 7, "2022": 6, "2023": 4, "2024": 9, "2025": 5}, "kt": {"1982": null, "1983": null, "1984": null, "1985": null, "1986": null, "1987": null, "1988": null, "1989": null, "1990": null, "1991": null, "1992": null, "1993": null, "1994": null, "1995": null, "1996": null, "1997": null, "1998": null, "1999": null, "2000": null, "2001": null, "2002": null, "2003": null, "2004": null, "2005": null, "2006": null, "2007": null, "2008": null, "2009": null, "2010": null, "2011": null, "2012": null, "2013": null, "2014": null, "2015": 10, "2016": 10, "2017": 10, "2018": 9, "2019": 6, "2020": 3, "2021": 1, "2022": 4, "2023": 2, "2024": 5, "2025": 6}}, "postData": {"samsung": {"1982": 2, "1984": 2, "1985": 1, "1986": 2, "1987": 2, "1988": 3, "1989": 4, "1990": 2, "1991": 3, "1992": 4, "1993": 2, "1997": 3, "1998": 3, "1999": 3, "2000": 3, "2001": 2, "2002": 1, "2003": 4, "2004": 2, "2005": 1, "2006": 1, "2007": 4, "2008": 3, "2010": 2, "2011": 1, "2012": 1, "2013": 1, "2014": 1, "2015": 2, "2021": 3, "2024": 2, "2025": 3}, "kia": {"1983": 1, "1986": 1, "1987": 1, "1988": 1, "1989": 1, "1990": 3, "1991": 1, "1992": 3, "1993": 1, "1994": 4, "1996": 1, "1997": 1, "2002": 3, "2003": 3, "2004": 4, "2006": 4, "2009": 1, "2011": 4, "2016": 5, "2017": 1, "2018": 5, "2022": 5, "2024": 1}, "lotte": {"1984": 1, "1991": 4, "1992": 1, "1995": 2, "1999": 2, "2000": 4, "2008": 4, "2009": 4, "2010": 4, "2011": 3, "2012": 3, "2017": 4}, "hyundai": {"1989": 3, "1994": 2, "1996": 2, "1998": 1, "2000": 1, "2001": 3, "2002": 4, "2003": 1, "2004": 1, "2006": 3}, "lg": {"1983": 2, "1990": 1, "1993": 3, "1994": 1, "1995": 3, "1997": 2, "1998": 2, "2000": 3, "2002": 2, "2013": 3, "2014": 3, "2016": 3, "2019": 4, "2020": 4, "2021": 4, "2022": 3, "2023": 1, "2024": 3, "2025": 1}, "doosan": {"1982": 1, "1986": 3, "1987": 3, "1993": 4, "1995": 1, "1998": 4, "1999": 3, "2000": 2, "2001": 1, "2004": 3, "2005": 2, "2007": 2, "2008": 2, "2009": 3, "2010": 3, "2012": 4, "2013": 2, "2015": 1, "2016": 1, "2017": 2, "2018": 2, "2019": 1, "2020": 2, "2021": 2, "2023": 5, "2024": 5}, "hanwha": {"1988": 2, "1989": 2, "1990": 4, "1991": 2, "1992": 2, "1994": 3, "1996": 4, "1999": 1, "2001": 4, "2005": 3, "2006": 2, "2007": 3, "2018": 4, "2025": 2}, "ssangwool": {"1996": 3, "1997": 4}, "ssg": {"2003": 2, "2005": 4, "2007": 1, "2008": 1, "2009": 2, "2010": 1, "2011": 2, "2012": 2, "2015": 5, "2017": 5, "2018": 1, "2019": 3, "2022": 1, "2023": 4, "2025": 4}, "kiwoom": {"2013": 4, "2014": 2, "2015": 4, "2016": 4, "2018": 3, "2019": 2, "2020": 5, "2021": 5, "2022": 2}, "nc": {"2014": 4, "2015": 3, "2016": 2, "2017": 3, "2019": 5, "2020": 1, "2023": 3, "2025": 5}, "kt": {"2020": 3, "2021": 1, "2022": 4, "2023": 2, "2024": 4}}, "postStage": {"samsung": {"1982": "한국시리즈 준우승", "1984": "한국시리즈 준우승", "1985": "전·후기 통합우승", "1986": "한국시리즈 준우승", "1987": "한국시리즈 준우승", "1988": "플레이오프 (PO) 탈락", "1989": "준플레이오프 (준PO) 탈락", "1990": "한국시리즈 준우승", "1991": "플레이오프 (PO) 탈락", "1992": "준플레이오프 (준PO) 탈락", "1993": "한국시리즈 준우승", "1997": "플레이오프 (PO) 탈락", "1998": "플레이오프 (PO) 탈락", "1999": "플레이오프 (PO) 탈락", "2000": "플레이오프 (PO) 탈락", "2001": "한국시리즈 준우승", "2002": "한국시리즈 우승", "2003": "준플레이오프 (준PO) 탈락", "2004": "한국시리즈 준우승", "2005": "한국시리즈 우승", "2006": "한국시리즈 우승", "2007": "준플레이오프 (준PO) 탈락", "2008": "플레이오프 (PO) 탈락", "2010": "한국시리즈 준우승", "2011": "한국시리즈 우승", "2012": "한국시리즈 우승", "2013": "한국시리즈 우승", "2014": "한국시리즈 우승", "2015": "한국시리즈 준우승", "2021": "플레이오프 (PO) 탈락", "2024": "한국시리즈 준우승", "2025": "플레이오프 (PO) 탈락"}, "kia": {"1983": "한국시리즈 우승", "1986": "한국시리즈 우승", "1987": "한국시리즈 우승", "1988": "한국시리즈 우승", "1989": "한국시리즈 우승", "1990": "플레이오프 (PO) 탈락", "1991": "한국시리즈 우승", "1992": "플레이오프 (PO) 탈락", "1993": "한국시리즈 우승", "1994": "준플레이오프 (준PO) 탈락", "1996": "한국시리즈 우승", "1997": "한국시리즈 우승", "2002": "플레이오프 (PO) 탈락", "2003": "플레이오프 (PO) 탈락", "2004": "준플레이오프 (준PO) 탈락", "2006": "준플레이오프 (준PO) 탈락", "2009": "한국시리즈 우승", "2011": "준플레이오프 (준PO) 탈락", "2016": "와일드카드 (WC) 탈락", "2017": "한국시리즈 우승", "2018": "와일드카드 (WC) 탈락", "2022": "와일드카드 (WC) 탈락", "2024": "한국시리즈 우승"}, "lotte": {"1984": "한국시리즈 우승", "1991": "준플레이오프 (준PO) 탈락", "1992": "한국시리즈 우승", "1995": "한국시리즈 준우승", "1999": "한국시리즈 준우승", "2000": "준플레이오프 (준PO) 탈락", "2008": "준플레이오프 (준PO) 탈락", "2009": "준플레이오프 (준PO) 탈락", "2010": "준플레이오프 (준PO) 탈락", "2011": "플레이오프 (PO) 탈락", "2012": "플레이오프 (PO) 탈락", "2017": "준플레이오프 (준PO) 탈락"}, "hyundai": {"1989": "플레이오프 (PO) 탈락", "1994": "한국시리즈 준우승", "1996": "한국시리즈 준우승", "1998": "한국시리즈 우승", "2000": "한국시리즈 우승", "2001": "플레이오프 (PO) 탈락", "2002": "준플레이오프 (준PO) 탈락", "2003": "한국시리즈 우승", "2004": "한국시리즈 우승", "2006": "플레이오프 (PO) 탈락"}, "lg": {"1983": "한국시리즈 준우승", "1990": "한국시리즈 우승", "1993": "플레이오프 (PO) 탈락", "1994": "한국시리즈 우승", "1995": "플레이오프 (PO) 탈락", "1997": "한국시리즈 준우승", "1998": "한국시리즈 준우승", "2000": "플레이오프 (PO) 탈락", "2002": "한국시리즈 준우승", "2013": "플레이오프 (PO) 탈락", "2014": "플레이오프 (PO) 탈락", "2016": "플레이오프 (PO) 탈락", "2019": "준플레이오프 (준PO) 탈락", "2020": "준플레이오프 (준PO) 탈락", "2021": "준플레이오프 (준PO) 탈락", "2022": "플레이오프 (PO) 탈락", "2023": "한국시리즈 우승", "2024": "플레이오프 (PO) 탈락", "2025": "한국시리즈 우승"}, "doosan": {"1982": "한국시리즈 우승", "1986": "플레이오프 (PO) 탈락", "1987": "플레이오프 (PO) 탈락", "1993": "준플레이오프 (준PO) 탈락", "1995": "한국시리즈 우승", "1998": "준플레이오프 (준PO) 탈락", "1999": "플레이오프 (PO) 탈락", "2000": "한국시리즈 준우승", "2001": "한국시리즈 우승", "2004": "플레이오프 (PO) 탈락", "2005": "한국시리즈 준우승", "2007": "한국시리즈 준우승", "2008": "한국시리즈 준우승", "2009": "플레이오프 (PO) 탈락", "2010": "플레이오프 (PO) 탈락", "2012": "준플레이오프 (준PO) 탈락", "2013": "한국시리즈 준우승", "2015": "한국시리즈 우승", "2016": "한국시리즈 우승", "2017": "한국시리즈 준우승", "2018": "한국시리즈 준우승", "2019": "한국시리즈 우승", "2020": "한국시리즈 준우승", "2021": "한국시리즈 준우승", "2023": "와일드카드 (WC) 탈락", "2024": "와일드카드 (WC) 탈락"}, "hanwha": {"1988": "한국시리즈 준우승", "1989": "한국시리즈 준우승", "1990": "준플레이오프 (준PO) 탈락", "1991": "한국시리즈 준우승", "1992": "한국시리즈 준우승", "1994": "플레이오프 (PO) 탈락", "1996": "준플레이오프 (준PO) 탈락", "1999": "한국시리즈 우승", "2001": "준플레이오프 (준PO) 탈락", "2005": "플레이오프 (PO) 탈락", "2006": "한국시리즈 준우승", "2007": "플레이오프 (PO) 탈락", "2018": "준플레이오프 (준PO) 탈락", "2025": "한국시리즈 준우승"}, "ssangwool": {"1996": "플레이오프 (PO) 탈락", "1997": "준플레이오프 (준PO) 탈락"}, "ssg": {"2003": "한국시리즈 준우승", "2005": "준플레이오프 (준PO) 탈락", "2007": "한국시리즈 우승", "2008": "한국시리즈 우승", "2009": "한국시리즈 준우승", "2010": "한국시리즈 우승", "2011": "한국시리즈 준우승", "2012": "한국시리즈 준우승", "2015": "와일드카드 (WC) 탈락", "2017": "와일드카드 (WC) 탈락", "2018": "한국시리즈 우승", "2019": "플레이오프 (PO) 탈락", "2022": "한국시리즈 우승", "2023": "준플레이오프 (준PO) 탈락", "2025": "준플레이오프 (준PO) 탈락"}, "kiwoom": {"2013": "준플레이오프 (준PO) 탈락", "2014": "한국시리즈 준우승", "2015": "준플레이오프 (준PO) 탈락", "2016": "준플레이오프 (준PO) 탈락", "2018": "플레이오프 (PO) 탈락", "2019": "한국시리즈 준우승", "2020": "와일드카드 (WC) 탈락", "2021": "와일드카드 (WC) 탈락", "2022": "한국시리즈 준우승"}, "nc": {"2014": "준플레이오프 (준PO) 탈락", "2015": "플레이오프 (PO) 탈락", "2016": "한국시리즈 준우승", "2017": "플레이오프 (PO) 탈락", "2019": "와일드카드 (WC) 탈락", "2020": "한국시리즈 우승", "2023": "플레이오프 (PO) 탈락", "2025": "와일드카드 (WC) 탈락"}, "kt": {"2020": "플레이오프 (PO) 탈락", "2021": "한국시리즈 우승", "2022": "준플레이오프 (준PO) 탈락", "2023": "한국시리즈 준우승", "2024": "준플레이오프 (준PO) 탈락"}}, "participants": {"1982": 6, "1983": 6, "1984": 6, "1985": 6, "1986": 7, "1987": 7, "1988": 7, "1989": 7, "1990": 7, "1991": 8, "1992": 8, "1993": 8, "1994": 8, "1995": 8, "1996": 8, "1997": 8, "1998": 8, "1999": 8, "2000": 8, "2001": 8, "2002": 8, "2003": 8, "2004": 8, "2005": 8, "2006": 8, "2007": 8, "2008": 8, "2009": 8, "2010": 8, "2011": 8, "2012": 8, "2013": 9, "2014": 9, "2015": 10, "2016": 10, "2017": 10, "2018": 10, "2019": 10, "2020": 10, "2021": 10, "2022": 10, "2023": 10, "2024": 10, "2025": 10}};
+const teamMap=Object.fromEntries(DATA.teams.map(t=>[t.id,t]));
+
+const nowView=document.getElementById('nowView');
+
+function buildNow2026(){
+  const host=document.getElementById('nowRows');
+  host.innerHTML='';
+  NOW_2026.forEach((s,idx)=>{
+    const t=teamMap[s.id];
+    const progress=Math.min(100,(s.played/144)*100);
+    const row=document.createElement('div');
+    row.className='now-row';
+    row.style.setProperty('--team',t.color);
+    row.style.setProperty('--progress',progress+'%');
+    const joint = (s.rank===7) ? '<span class="joint-rank">공동</span>' : '';
+    row.innerHTML=`
+      <div class="now-rank">${s.rank}${joint}</div>
+      <div class="now-logo"><img src="${t.logo}" alt="${s.team}"></div>
+      <div class="now-team">
+        <strong>${s.team}</strong>
+        <span>${s.w}승 ${s.d}무 ${s.l}패</span>
+      </div>
+      <div class="now-metric"><strong>${s.played}</strong><span>경기</span></div>
+      <div class="now-metric"><strong>${s.remain}</strong><span>잔여</span></div>
+      <div class="now-metric"><strong>${s.pct.toFixed(3).replace(/^0/,'')}</strong><span>승률</span></div>
+      <div class="now-metric"><strong>${s.gb===0?'–':s.gb}</strong><span>선두와 게임차</span></div>
+      <div class="now-metric">
+        <strong>${progress.toFixed(1)}%</strong><span>시즌 소화</span>
+        <div class="now-progress"><i></i></div>
+      </div>`;
+    host.appendChild(row);
+  });
+}
+
+
+// ─────────────────────────────────────────────────────────────
+// 2026 DAILY RANK HISTORY
+// Source loaded above as window.KBO_SEASON from public season data.
+// ─────────────────────────────────────────────────────────────
+const DAILY_TEAM_IDS=['kia','samsung','lotte','lg','doosan','hanwha','ssg','kiwoom','nc','kt'];
+const DAILY_NAME_TO_ID={
+  'KIA':'kia','삼성':'samsung','롯데':'lotte','LG':'lg','두산':'doosan',
+  '한화':'hanwha','SSG':'ssg','키움':'kiwoom','NC':'nc','KT':'kt'
+};
+let dailySelected=null;
+let dailyZoom=1;
+let dailyHistory={dates:[],ranks:{}};
+
+const dailySvg=document.getElementById('dailyChart');
+const dailyWrap=document.getElementById('dailyChartWrap');
+const dailyScroll=document.getElementById('dailyChartScroll');
+const dailyTooltip=document.getElementById('dailyTooltip');
+const dailyButtons=document.getElementById('teamButtons2026');
+const allBtn2026=document.getElementById('allBtn2026');
+
+function buildDailyButtons(){
+  dailyButtons.innerHTML='';
+  DAILY_TEAM_IDS.forEach(id=>{
+    const t=teamMap[id];
+    const b=document.createElement('button');
+    b.type='button'; b.className='team-btn'; b.dataset.id=id;
+    b.style.setProperty('--team',t.color);
+    const kiaAlt=id==='kia'?`<div class="kia-alt" aria-label="KIA 타이거즈 선택 엠블럼">
+      <svg viewBox="0 0 120 92" aria-hidden="true">
+        <path d="M14 10h92v54L60 86 14 64z" fill="#111"/>
+        <path d="M14 10h92" stroke="#fff" stroke-width="4"/>
+        <text x="60" y="28" text-anchor="middle" fill="#fff" font-size="11" font-weight="900">KIA</text>
+        <text x="60" y="52" text-anchor="middle" fill="#fff" font-size="20" font-weight="1000" letter-spacing="-1">TIGERS</text>
+        <path d="M24 63h72L60 79z" fill="#EA0029"/>
+      </svg></div>`:'';
+    b.innerHTML=`<div class="logo-box"><img src="${t.logo}" alt="${t.name} 로고" onerror="this.outerHTML='<div class=&quot;logo-fallback&quot;>${t.short}</div>'">${kiaAlt}</div>
+      <div class="team-name">${t.name}</div>`;
+    b.addEventListener('click',()=>{
+      dailySelected=dailySelected===id?null:id;
+      selected=dailySelected;
+      applyTheme();
+      syncDailyButtons();
+      drawDaily();
+    });
+    dailyButtons.appendChild(b);
+  });
+}
+
+function syncDailyButtons(){
+  document.querySelectorAll('#teamButtons2026 .team-btn').forEach(b=>{
+    b.classList.toggle('selected',b.dataset.id===dailySelected);
+    b.classList.toggle('dim',!!dailySelected&&b.dataset.id!==dailySelected);
+  });
+  if(!allBtn2026)return;
+  if(!dailySelected){
+    allBtn2026.style.background='#111';
+    allBtn2026.style.color='#fff';
+    allBtn2026.style.borderColor='#111';
+  }else{
+    allBtn2026.style.background='transparent';
+    allBtn2026.style.color='var(--text)';
+    allBtn2026.style.borderColor='var(--border)';
+  }
+}
+allBtn2026.addEventListener('click',()=>{
+  dailySelected=null; selected=null;
+  applyTheme(); syncDailyButtons(); drawDaily();
+});
+
+function initDailyChart(){
+  const D=window.KBO_SEASON;
+  if(D && D.rank_history && Array.isArray(D.rank_history.dates)){
+    dailyHistory=D.rank_history;
+    const dates=dailyHistory.dates;
+    const last=dates[dates.length-1]||'';
+    document.getElementById('seasonDateLabel').innerHTML=
+      `개막 후 ${dates.length} 경기일<br>${last ? last.replaceAll('-','.')+'까지' : ''}`;
+    document.getElementById('seasonSource').textContent=
+      '2026 완료 경기 누적 기준의 일자별 순위입니다. 동률은 공동 순위이며 경기 있는 날만 표시합니다.';
+  }else{
+    document.getElementById('seasonDateLabel').innerHTML='2026 시즌<br>데이터 연결 실패';
+    document.getElementById('seasonSource').textContent=
+      '2026 일자별 데이터에 연결하지 못했습니다. 인터넷 연결 후 파일을 다시 열어주세요.';
+  }
+  drawDaily();
+}
+
+function applyDailyZoom(){
+  if(!dailyScroll||!dailyWrap)return;
+  const base=Math.max(dailyScroll.clientWidth,900);
+  dailyWrap.style.width=Math.max(720,Math.round(base*dailyZoom))+'px';
+}
+dailyScroll.addEventListener('wheel',(ev)=>{
+  ev.preventDefault();
+  const dir=ev.deltaY<0?1:-1;
+  dailyZoom=Math.min(2.6,Math.max(.68,dailyZoom+dir*.08));
+  applyDailyZoom();
+},{passive:false});
+
+function dailyTeamSeries(id){
+  const name=Object.keys(DAILY_NAME_TO_ID).find(k=>DAILY_NAME_TO_ID[k]===id);
+  return (dailyHistory.ranks && dailyHistory.ranks[name]) || [];
+}
+function dateNumber(s){
+  const [yy,mm,dd]=s.split('-').map(Number);
+  return Date.UTC(yy,mm-1,dd);
+}
+function dailyX(date){
+  const dates=dailyHistory.dates||[];
+  if(dates.length<2)return DM.left;
+  const min=dateNumber(dates[0]), max=dateNumber(dates[dates.length-1]);
+  const v=dateNumber(date);
+  return DM.left+((v-min)/(max-min||1))*DIW;
+}
+function dailyY(rank){return DM.top+((rank-1)/9)*DIH;}
+const DM={top:44,right:112,bottom:62,left:66};
+const DIW=1510-DM.left-DM.right, DIH=700-DM.top-DM.bottom;
+
+function dailySmooth(points){
+  if(!points.length)return'';
+  let d=`M ${points[0].x} ${points[0].y}`;
+  for(let i=1;i<points.length;i++){
+    const a=points[i-1],b=points[i],mid=(a.x+b.x)/2;
+    d+=` C ${mid} ${a.y}, ${mid} ${b.y}, ${b.x} ${b.y}`;
+  }
+  return d;
+}
+function dailyLineColor(t){return t.id==='lg'?'#C30452':(dailySelected===t.id?t.themeLine:t.color);}
+function dailyOpacity(t){return dailySelected?(dailySelected===t.id?1:.07):.78;}
+function dailyWidth(t){return dailySelected===t.id?7.2:2.4;}
+
+function drawDaily(){
+  if(!dailySvg)return;
+  dailySvg.innerHTML='';
+  const g=svgEl('g'); dailySvg.appendChild(g);
+  const text=css('--text'),grid=css('--grid');
+
+  for(let r=1;r<=10;r++){
+    const yy=dailyY(r);
+    g.appendChild(svgEl('line',{x1:DM.left,y1:yy,x2:DM.left+DIW,y2:yy,stroke:grid,'stroke-width':r===1?1.4:1}));
+    addText(g,DM.left-12,yy+4,r+'위',{'text-anchor':'end','font-size':'11','font-weight':'850','fill':text,opacity:.7});
+  }
+
+  const dates=dailyHistory.dates||[];
+  if(!dates.length){
+    addText(g,1510/2,700/2,'2026 일자별 데이터를 불러오는 중입니다.',{
+      'text-anchor':'middle','font-size':'18','font-weight':'800','fill':text,opacity:.55
+    });
+    return;
+  }
+
+  // Monthly guides + first/last day
+  const marks=[];
+  let prevMonth='';
+  dates.forEach((d,i)=>{
+    const ym=d.slice(0,7);
+    if(ym!==prevMonth){ marks.push(d); prevMonth=ym; }
+  });
+  if(!marks.includes(dates[dates.length-1]))marks.push(dates[dates.length-1]);
+  marks.forEach(d=>{
+    const xx=dailyX(d);
+    g.appendChild(svgEl('line',{x1:xx,y1:DM.top,x2:xx,y2:DM.top+DIH,stroke:grid,'stroke-width':1}));
+    const parts=d.split('-');
+    addText(g,xx,DM.top+DIH+31,`${Number(parts[1])}/${Number(parts[2])}`,{
+      'text-anchor':'middle','font-size':'10','font-weight':'750','fill':text,opacity:.48
+    });
+  });
+
+  const ordered=[...DAILY_TEAM_IDS].sort((a,b)=>(dailySelected===a?1:0)-(dailySelected===b?1:0));
+  ordered.forEach(id=>{
+    const t=teamMap[id], ranks=dailyTeamSeries(id);
+    const pts=dates.map((date,i)=>({date,rank:ranks[i]})).filter(p=>Number.isFinite(p.rank));
+    if(!pts.length)return;
+    const op=dailyOpacity(t), sw=dailyWidth(t), col=dailyLineColor(t);
+    const d=dailySmooth(pts.map(p=>({x:dailyX(p.date),y:dailyY(p.rank)})));
+    g.appendChild(svgEl('path',{
+      d,fill:'none',stroke:col,'stroke-width':sw,
+      'stroke-linecap':'round','stroke-linejoin':'round',opacity:op
+    }));
+
+    pts.forEach(p=>{
+      const c=svgEl('circle',{
+        cx:dailyX(p.date),cy:dailyY(p.rank),
+        r:dailySelected===id?4.8:2.5,
+        fill:id==='lg'?'#000000':col,
+        stroke:dailySelected===id?'var(--surface)':'#fff',
+        'stroke-width':dailySelected===id?1.8:1,opacity:op
+      });
+      g.appendChild(c);
+
+      const hit=svgEl('circle',{cx:dailyX(p.date),cy:dailyY(p.rank),r:7.5,fill:'transparent'});
+      hit.style.cursor='pointer';
+      hit.addEventListener('mouseenter',ev=>showDailyTooltip(ev,t,p));
+      hit.addEventListener('mousemove',moveDailyTooltip);
+      hit.addEventListener('mouseleave',()=>dailyTooltip.style.display='none');
+      g.appendChild(hit);
+    });
+
+    const last=pts[pts.length-1];
+    addText(g,dailyX(last.date)+7,dailyY(last.rank)+4,t.short,{
+      'font-size':'10','font-weight':'900','fill':id==='lg'?'#C30452':col,opacity:op
+    });
+  });
+}
+function showDailyTooltip(ev,t,p){
+  dailyTooltip.innerHTML=`<div class="year">${p.date.replaceAll('-','.')}</div>
+    <div class="team">${t.name}</div>
+    <div class="rank">${p.rank}위</div>
+    <div class="meta">2026 정규시즌 일자별 순위</div>`;
+  dailyTooltip.style.display='block';
+  moveDailyTooltip(ev);
+}
+function moveDailyTooltip(ev){
+  const r=dailyWrap.getBoundingClientRect();
+  dailyTooltip.style.left=Math.min(ev.clientX-r.left+14,dailyWrap.clientWidth-185)+'px';
+  dailyTooltip.style.top=Math.max(ev.clientY-r.top-18,8)+'px';
+}
+
+
+const recordView=document.getElementById('recordView');
+const seasonView=document.getElementById('seasonView');
+document.querySelectorAll('.section-btn').forEach(btn=>btn.addEventListener('click',()=>{
+  const sec=btn.dataset.section;
+  document.querySelectorAll('.section-btn').forEach(b=>b.classList.toggle('active',b===btn));
+
+  nowView.hidden = sec!=='now2026';
+  seasonView.hidden = sec!=='season2026';
+  recordView.hidden = sec!=='record';
+
+  selected=null;
+  dailySelected=null;
+  applyTheme();
+  syncButtons();
+  syncDailyButtons();
+
+  if(sec==='record'){
+    draw();
+    requestAnimationFrame(applyChartZoom);
+  }else if(sec==='season2026'){
+    drawDaily();
+    requestAnimationFrame(applyDailyZoom);
+  }
+}));
+
+
+
+const DISPLAY_ORDER=['kia','samsung','lotte','lg','doosan','hanwha','ssg','kiwoom','nc','kt','hyundai','ssangwool'];
+DATA.teams.sort((a,b)=>DISPLAY_ORDER.indexOf(a.id)-DISPLAY_ORDER.indexOf(b.id));
+
+const app=document.getElementById('app');
+const svg=document.getElementById('chart');
+const wrap=document.getElementById('chartWrap');
+const tooltip=document.getElementById('tooltip');
+const allBtn=document.getElementById('allBtn');
+const teamButtons=document.getElementById('teamButtons');
+let mode='regular', selected=null;
+
+const W=1510,H=700,M={top:44,right:112,bottom:62,left:66};
+const IW=W-M.left-M.right, IH=H-M.top-M.bottom;
+const x=yr=>M.left+((yr-1982)/(2025-1982))*IW;
+
+let chartZoom=1;
+const chartScroll=document.querySelector('.chart-scroll');
+function applyChartZoom(){
+  const base=Math.max(chartScroll.clientWidth,900);
+  const target=Math.max(720,Math.round(base*chartZoom));
+  wrap.style.width=target+'px';
+}
+chartScroll.addEventListener('wheel',(ev)=>{
+  ev.preventDefault();
+  const direction=ev.deltaY<0?1:-1;
+  const next=Math.min(2.35,Math.max(.68,chartZoom+(direction*.08)));
+  if(next===chartZoom)return;
+  chartZoom=next;
+  applyChartZoom();
+},{passive:false});
+window.addEventListener('resize',()=>{applyChartZoom();applyDailyZoom();});
+
+const yRegular=r=>M.top+((r-1)/9)*IH;
+const yPost=r=>M.top+((r-1)/5)*IH; // 1~5 + 미진출(6)
+
+function css(name){return getComputedStyle(document.documentElement).getPropertyValue(name).trim();}
+function svgEl(name,attrs={}){
+ const e=document.createElementNS('http://www.w3.org/2000/svg',name);
+ Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v)); return e;
+}
+function addText(g,xx,yy,txt,attrs={}){const e=svgEl('text',{x:xx,y:yy,...attrs});e.textContent=txt;g.appendChild(e);return e;}
+
+function histName(id,y){
+ if(id==='kia')return y<=2000?'해태 타이거즈':'KIA 타이거즈';
+ if(id==='lg')return y<=1989?'MBC 청룡':'LG 트윈스';
+ if(id==='doosan')return y<=1998?'OB 베어스':'두산 베어스';
+ if(id==='hanwha')return y<1986?null:(y<=1993?'빙그레 이글스':'한화 이글스');
+ if(id==='ssg')return y<2000?null:(y<=2020?'SK 와이번스':'SSG 랜더스');
+ if(id==='kiwoom'){if(y<2008)return null;if(y===2008)return'우리 히어로즈';if(y===2009)return'히어로즈';if(y<=2018)return'넥센 히어로즈';return'키움 히어로즈';}
+ if(id==='hyundai'){if(y<=1984)return'삼미 슈퍼스타즈';if(y<=1987)return'청보 핀토스';if(y<=1995)return'태평양 돌핀스';if(y<=2007)return'현대 유니콘스';return null;}
+ if(id==='ssangwool')return (y>=1991&&y<=1999)?'쌍방울 레이더스':null;
+ return teamMap[id]?.name||id;
+}
+
+function smoothPath(points){
+ if(!points.length)return'';
+ let d=`M ${points[0].x} ${points[0].y}`;
+ for(let i=1;i<points.length;i++){
+   const a=points[i-1],b=points[i],mid=(a.x+b.x)/2;
+   d+=` C ${mid} ${a.y}, ${mid} ${b.y}, ${b.x} ${b.y}`;
+ }
+ return d;
+}
+
+function activeRegularPoints(id){
+ const src=DATA.regularData[id]; return DATA.years.map(year=>({year,rank:src[String(year)]??null}));
+}
+function activePostPoints(id){
+ const reg=DATA.regularData[id], post=DATA.postData[id];
+ return DATA.years.filter(year=>reg[String(year)]!=null).map(year=>({
+   year, qualified:post[String(year)]!=null, rank:post[String(year)]??6
+ }));
+}
+
+function applyTheme(){
+ const root=document.documentElement;
+ if(!selected){
+   root.style.setProperty('--page-bg','#f5f5f3');root.style.setProperty('--surface','#ffffff');
+   root.style.setProperty('--text','#111111');root.style.setProperty('--muted','#777b82');
+   root.style.setProperty('--border','#dedfdf');root.style.setProperty('--grid','#e9eaeb');
+   root.style.setProperty('--inactive','#f1f1ef');
+ }else{
+   const t=teamMap[selected];
+   root.style.setProperty('--page-bg',t.themeBg);root.style.setProperty('--surface',t.themeBg);
+   root.style.setProperty('--text',t.themeText);root.style.setProperty('--muted',t.themeText);
+   root.style.setProperty('--border','color-mix(in srgb, '+t.themeText+' 26%, transparent)');
+   root.style.setProperty('--grid','color-mix(in srgb, '+t.themeText+' 18%, transparent)');
+   root.style.setProperty('--inactive','color-mix(in srgb, '+t.themeText+' 8%, transparent)');
+ }
+}
+
+function buildButtons(){
+ DATA.teams.forEach(t=>{
+  const b=document.createElement('button');b.type='button';b.className='team-btn';b.dataset.id=t.id;
+  b.style.setProperty('--team',t.color);
+  const kiaAlt=t.id==='kia'?`<div class="kia-alt" aria-label="KIA 타이거즈 선택 엠블럼">
+<svg viewBox="0 0 120 92" role="img" aria-hidden="true">
+  <path d="M14 10h92v54L60 86 14 64z" fill="#111"/>
+  <path d="M14 10h92" stroke="#fff" stroke-width="4"/>
+  <text x="60" y="28" text-anchor="middle" fill="#fff" font-size="11" font-weight="900">KIA</text>
+  <text x="60" y="52" text-anchor="middle" fill="#fff" font-size="20" font-weight="1000" letter-spacing="-1">TIGERS</text>
+  <path d="M24 63h72L60 79z" fill="#EA0029"/>
+</svg></div>`:'';
+  b.innerHTML=`<div class="logo-box"><img src="${t.logo}" alt="${t.name} 로고" onerror="this.outerHTML='<div class=&quot;logo-fallback&quot;>${t.short}</div>'">${kiaAlt}</div><div class="team-name">${t.name}</div><div class="team-era">${t.era}</div>`;
+  b.addEventListener('click',()=>{selected=selected===t.id?null:t.id;applyTheme();syncButtons();draw();});
+  teamButtons.appendChild(b);
+ });
+}
+function syncButtons(){
+ document.querySelectorAll('.team-btn').forEach(b=>{
+   b.classList.toggle('selected',b.dataset.id===selected);
+   b.classList.toggle('dim',!!selected&&b.dataset.id!==selected);
+ });
+ if(!selected){allBtn.style.background='#111';allBtn.style.color='#fff';allBtn.style.borderColor='#111';}
+ else{allBtn.style.background='transparent';allBtn.style.color='var(--text)';allBtn.style.borderColor='var(--border)';}
+}
+allBtn.addEventListener('click',()=>{selected=null;applyTheme();syncButtons();draw();});
+
+document.querySelectorAll('.tab').forEach(tab=>tab.addEventListener('click',()=>{
+ mode=tab.dataset.mode;
+ document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t===tab));
+ document.getElementById('chartTitle').textContent=mode==='regular'?'정규시즌 최종 순위':'포스트시즌 최종 도달 단계';
+ document.getElementById('chartHelp').innerHTML=mode==='regular'
+   ?'팀을 선택하면 해당 프랜차이즈의 기록이 강조됩니다.<br>포인트에 마우스를 올리면 순위와 참가 구단 수를 볼 수 있습니다.<br>차트 위에서 마우스 휠로 그래프 폭을 축소·확대할 수 있습니다.'
+   :'실선은 포스트시즌 진출 기록, 회색 점선은 미진출 시즌입니다.<br>1위 우승 · 2위 준우승 · 3위 PO · 4위 준PO · 5위 WC<br>차트 위에서 마우스 휠로 그래프 폭을 축소·확대할 수 있습니다.';
+ document.getElementById('chartFoot').innerHTML=mode==='regular'
+   ?'<span>위로 갈수록 높은 순위</span><span>회색 영역 = 당시 존재하지 않은 순위</span><span>구단명 변경은 프랜차이즈 계보로 연결</span>'
+   :'<span>1위 = 한국시리즈 우승</span><span>6번째 행 = 포스트시즌 미진출</span><span>미진출 구간은 회색 점선</span>';
+ draw();
+}));
+
+function lineColor(t){if(t.id==='lg')return '#C30452';return selected===t.id?t.themeLine:t.color;}
+function opacityFor(t){return selected?(selected===t.id?1:.08):.82;}
+function widthFor(t){return selected===t.id?7.2:2.4;}
+
+function drawRegularTeam(g,t){
+ const pts=activeRegularPoints(t.id), ys=yRegular, op=opacityFor(t), sw=widthFor(t), col=lineColor(t);
+ let seg=[];
+ const flush=()=>{
+   if(seg.length<2){seg=[];return;}
+   const xy=seg.map(p=>({x:x(p.year),y:ys(p.rank)}));
+   const d=smoothPath(xy);
+   g.appendChild(svgEl('path',{d,fill:'none',stroke:t.id==='lg'?'#C30452':col,'stroke-width':sw,'stroke-linecap':'round','stroke-linejoin':'round',opacity:op}));
+   seg=[];
+ };
+ pts.forEach(p=>{if(p.rank==null)flush();else seg.push(p);});flush();
+ drawPoints(g,t,pts.filter(p=>p.rank!=null),ys,op);
+}
+
+function drawPostTeam(g,t){
+ const pts=activePostPoints(t.id); if(!pts.length)return;
+ const op=opacityFor(t), sw=widthFor(t), col=lineColor(t);
+ const xy=pts.map(p=>({x:x(p.year),y:yPost(p.rank)}));
+ // Continuous grey dotted history, including non-qualifying seasons.
+ g.appendChild(svgEl('path',{
+   d:smoothPath(xy),fill:'none',stroke:selected===t.id?'rgba(210,214,220,.88)':'#b8bcc3',
+   'stroke-width':selected===t.id?4.8:1.7,'stroke-dasharray':selected===t.id?'7 7':'5 6',
+   'stroke-linecap':'round','stroke-linejoin':'round',opacity:op
+ }));
+ // Overlay colored smooth segments only where consecutive points both represent postseason qualification.
+ for(let i=1;i<pts.length;i++){
+   const a=pts[i-1],b=pts[i];
+   if(a.qualified&&b.qualified){
+     const d=smoothPath([{x:x(a.year),y:yPost(a.rank)},{x:x(b.year),y:yPost(b.rank)}]);
+     g.appendChild(svgEl('path',{d,fill:'none',stroke:t.id==='lg'?'#C30452':col,'stroke-width':sw,'stroke-linecap':'round','stroke-linejoin':'round',opacity:op}));
+   }
+ }
+ drawPoints(g,t,pts,yPost,op,true);
+}
+
+function drawPoints(g,t,pts,ys,op,isPost=false){
+ pts.forEach(p=>{
+   const qualified=!isPost||p.qualified;
+   if(qualified){
+     const c=svgEl('circle',{cx:x(p.year),cy:ys(p.rank),r:selected===t.id?5.3:3.2,
+       fill:t.id==='lg'?'#000000':lineColor(t),stroke:selected===t.id?'var(--surface)':'#fff','stroke-width':selected===t.id?2:1.2,opacity:op});
+     g.appendChild(c);
+   } else if(selected===t.id){
+     g.appendChild(svgEl('circle',{cx:x(p.year),cy:ys(6),r:2.7,fill:'none',stroke:'#c8ccd2','stroke-width':'1.4',opacity:.9}));
+   }
+   // generous invisible hit target: works even for non-postseason years
+   const hit=svgEl('circle',{cx:x(p.year),cy:ys(p.rank),r:8,fill:'transparent'});
+   hit.style.cursor='pointer';
+   hit.addEventListener('mouseenter',ev=>showTooltip(ev,t,p,isPost));
+   hit.addEventListener('mousemove',moveTooltip);
+   hit.addEventListener('mouseleave',()=>tooltip.style.display='none');
+   g.appendChild(hit);
+ });
+}
+
+function showTooltip(ev,t,p,isPost){
+ const name=histName(t.id,p.year)||t.name;
+ let body=`<div class="year">${p.year}</div><div class="team">${name}</div>`;
+ if(!isPost){
+   body+=`<div class="rank">정규시즌 ${p.rank}위</div><div class="meta">참가 구단 ${DATA.participants[String(p.year)]}팀</div>`;
+ }else if(p.qualified){
+   const stage=DATA.postStage[t.id]?.[String(p.year)]||'';
+   body+=`<div class="rank">최종 ${p.rank}위</div><div class="meta">${stage}</div>`;
+ }else{
+   body+=`<div class="rank">미진출</div><div class="meta">포스트시즌 진출 실패</div>`;
+ }
+ tooltip.innerHTML=body;tooltip.style.display='block';moveTooltip(ev);
+}
+function moveTooltip(ev){
+ const r=wrap.getBoundingClientRect();
+ tooltip.style.left=Math.min(ev.clientX-r.left+14,wrap.clientWidth-190)+'px';
+ tooltip.style.top=Math.max(ev.clientY-r.top-18,8)+'px';
+}
+
+function draw(){
+ svg.innerHTML='';
+ const g=svgEl('g');svg.appendChild(g);
+ const text=css('--text'),grid=css('--grid'),inactive=css('--inactive');
+ const ys=mode==='regular'?yRegular:yPost;
+ const ymax=mode==='regular'?10:6;
+
+ if(mode==='regular'){
+   DATA.years.forEach(yr=>{
+     const n=DATA.participants[String(yr)];
+     if(n<10){
+       const step=IW/(DATA.years.length-1), xx=x(yr)-step/2, top=yRegular(n+.48);
+       g.appendChild(svgEl('rect',{x:xx,y:top,width:step,height:M.top+IH-top,fill:inactive}));
+     }
+   });
+ }
+
+ for(let r=1;r<=ymax;r++){
+   const yy=ys(r);
+   g.appendChild(svgEl('line',{x1:M.left,y1:yy,x2:M.left+IW,y2:yy,stroke:grid,'stroke-width':r===1?1.4:1}));
+   const label=mode==='post'&&r===6?'미진출':r+'위';
+   addText(g,M.left-12,yy+4,label,{'text-anchor':'end','font-size':'11','font-weight':'850','fill':text,opacity:r===6?.5:.7});
+ }
+ DATA.years.forEach(yr=>{
+   if(yr===1982||yr===2025||yr%5===0){
+     const xx=x(yr);
+     g.appendChild(svgEl('line',{x1:xx,y1:M.top,x2:xx,y2:M.top+IH,stroke:grid,'stroke-width':1}));
+     addText(g,xx,M.top+IH+31,String(yr),{'text-anchor':'middle','font-size':'10','font-weight':'750','fill':text,opacity:.48});
+   }
+ });
+
+ // draw selected team last
+ [...DATA.teams].sort((a,b)=>(selected===a.id?1:0)-(selected===b.id?1:0)).forEach(t=>{
+   if(mode==='regular')drawRegularTeam(g,t);else drawPostTeam(g,t);
+ });
+}
+
+buildButtons();buildDailyButtons();buildNow2026();applyTheme();syncButtons();syncDailyButtons();draw();initDailyChart();requestAnimationFrame(()=>{applyChartZoom();applyDailyZoom();});
+</script>
+</body>
+</html>
